@@ -55,6 +55,7 @@ Rails.application.routes.draw do
       post "sync/runs", to: "sync#create"
       post "sync/runs/:id/claim", to: "sync#claim"
       post "sync/runs/:id/events", to: "sync#events"
+      post "sync/runs/:id/files", to: "sync#files"
       post "sync/runs/:id/finish", to: "sync#finish"
       post "sync/refresh", to: "sync#refresh"
     end

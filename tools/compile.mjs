@@ -15,7 +15,7 @@ const run = (cmd, args, opts = {}) => {
   execFileSync(cmd, args, { cwd: root, stdio: 'inherit', shell: process.platform === 'win32' && cmd === 'pnpm', ...opts });
 };
 
-const exes = { 'wikisync.exe': './cmd/wikisync', 'wikisync-chromium.exe': './cmd/chromium' };
+const exes = { 'wikisync.exe': './cmd/wikisync', 'wikisync-chromium.exe': './cmd/chromium', 'wikisync-remote.exe': './cmd/wikisync-remote' };
 for (const [out, pkg] of Object.entries(exes)) run('go', ['build', '-o', `bin/${out}`, pkg]);
 
 const dlls = { 'wikisync-chromium.dll': './cmd/chromiumdll', 'wikisync-useragent.dll': './cmd/useragentdll' };

@@ -27,8 +27,9 @@ spec:
             - containerPort: 3000
           envFrom: [{ secretRef: { name: ragemp-wiki } }]
           env:
-            # wikisync + Chromium are in the image, so syncs run in this pod.
-            # To use an external agent through /api/v2 instead, add SYNC_RUNNER=agent.
+            # Cloudflare challenges this cluster, so syncs run on a PC with wikisync-remote.exe (needs WIKISYNC_API_KEY in the secret).
+            # Remove SYNC_RUNNER to run wikisync inside this pod instead.
+            - { name: SYNC_RUNNER, value: agent }
           volumeMounts:
             - { name: data, mountPath: /data/dist, subPath: dist }
             - { name: data, mountPath: /app/storage, subPath: storage }
