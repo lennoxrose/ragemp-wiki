@@ -12,7 +12,8 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends build-essen
 WORKDIR /app
 ENV RAILS_ENV=production BUNDLE_WITHOUT="development:test"
 COPY web/Gemfile web/Gemfile.lock ./
-RUN bundle install && rm -rf "$BUNDLE_PATH"/ruby/*/cache
+# The committed lockfile was generated on Windows; add Linux so bundler picks the Linux builds of nokogiri/prism.
+RUN bundle lock --add-platform x86_64-linux && bundle install && rm -rf /usr/local/bundle/cache
 COPY web/ .
 RUN bundle lock --add-platform x86_64-linux
 RUN SECRET_KEY_BASE_DUMMY=1 bin/rails assets:precompile
