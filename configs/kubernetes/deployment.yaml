@@ -13,6 +13,10 @@ spec:
     metadata:
       labels: { app: ragemp-wiki }
     spec:
+      # Private project => private registry. Create with a deploy token (read_registry):
+      #   kubectl create secret docker-registry gitlab-registry -n ragemp-wiki --docker-server=<registry host> --docker-username=<token user> --docker-password=<token>
+      imagePullSecrets:
+        - name: gitlab-registry
       securityContext:
         fsGroup: 1000
       initContainers:

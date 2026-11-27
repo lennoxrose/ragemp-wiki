@@ -10,5 +10,5 @@ resources:
 # secret.example.yaml is deliberately not listed: create the real Secret yourself (kubectl / sealed-secrets / SOPS).
 images:
   - name: ragemp-wiki
-    newName: ghcr.io/CHANGE_ME/ragemp-wiki
-    newTag: latest
+    newName: registry.gitlab.rigkit.org/1337/ragemp-wiki
+    newTag: latest   # CI also pushes :<short sha> and :<git tag>
