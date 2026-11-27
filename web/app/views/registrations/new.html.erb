@@ -1,7 +1,7 @@
 <%= form_with url: register_path, class: "form auth-form" do |f| %>
   <div class="logo"><%= image_tag "logo-r.svg", alt: "RAGE Multiplayer", width: 72, height: 68 %></div>
   <% if flash.now[:error] %><p class="error" role="alert"><%= flash.now[:error] %></p><% end %>
-  <%= f.text_field :invite_code, placeholder: "Invite Code", autocomplete: "off", required: true, value: params[:invite_code], aria: { label: "Invite Code" } %>
+  <%= f.text_field :invite_code, placeholder: "Invite Code", autocomplete: "off", required: true, value: params[:invite_code] || params[:invitecode], aria: { label: "Invite Code" } %>
   <%= f.email_field :email, placeholder: "Email", autocomplete: "email", required: true, value: params[:email], aria: { label: "Email" } %>
   <%= f.password_field :password, placeholder: "Password", autocomplete: "new-password", required: true, minlength: 8, aria: { label: "Password" } %>
   <%= render "shared/turnstile" %>

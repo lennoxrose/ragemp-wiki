@@ -5,7 +5,7 @@ class InviteCode < ApplicationRecord
   scope :available, -> { where(used_by_id: nil, revoked_at: nil) }
   scope :unused, -> { available }
 
-  before_validation(on: :create) { self.code ||= SecureRandom.alphanumeric(10).upcase }
+  before_validation(on: :create) { self.code ||= "RAGE-#{SecureRandom.alphanumeric(10).upcase}" }
   validates :code, presence: true, uniqueness: true
 
   def used? = used_by_id.present?

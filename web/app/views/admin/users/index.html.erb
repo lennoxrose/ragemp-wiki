@@ -88,7 +88,7 @@
               <% if i.revoked? %><%= chip "Revoked" %><% elsif i.used? %><%= chip "Used by #{i.used_by&.name || "a deleted user"}" %>
               <% else %>
                 <%= chip "Unused", accent: true %>
-                <button type="button" class="btn btn-icon" data-copy="<%= i.code %>" data-keep="1" aria-label="Copy code <%= i.code %>"><%= icon "copy", size: 16 %></button>
+                <button type="button" class="btn btn-icon" data-copy="<%= register_url(invitecode: i.code) %>" data-keep="1" aria-label="Copy invite link for <%= i.code %>" title="Copy invite link"><%= icon "copy", size: 16 %></button>
                 <%= button_to admin_invite_path(i), method: :delete, class: "btn btn-icon", "aria-label": "Revoke code #{i.code}" do %><%= icon "ban", size: 16 %><% end %>
               <% end %>
             </div>
