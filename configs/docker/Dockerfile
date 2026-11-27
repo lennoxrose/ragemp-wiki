@@ -28,7 +28,7 @@ ENV RAILS_ENV=production BUNDLE_WITHOUT="development:test" \
 COPY --from=wikisync /out/wikisync /usr/local/bin/wikisync
 COPY --from=build /usr/local/bundle /usr/local/bundle
 COPY --from=build /app /app
-RUN useradd -u 1000 -m rails && mkdir -p /data/dist && chown -R rails /app/log /app/tmp /app/storage /data
+RUN useradd -u 1000 -m rails && mkdir -p /app/log /app/tmp /app/storage /data/dist && chown -R rails /app/log /app/tmp /app/storage /data
 USER 1000
 EXPOSE 3000
 # `rails server` (not bare puma) so the in-process sync scheduler starts.
