@@ -70,10 +70,20 @@ func Start(o Options) (Info, bool, error) {
 	if os.Getenv("CHROMIUM_NO_SANDBOX") != "" { // containers: no user namespaces, tiny /dev/shm
 		args = append(args, "--no-sandbox", "--disable-dev-shm-usage")
 	}
+	// CHROMIUM_XVFB: containers have no display; a headed browser on a virtual one
+	// passes Cloudflare far more often than --headless.
+	xvfb := os.Getenv("CHROMIUM_XVFB") != ""
 	if !o.Show {
-		args = append(args, "--headless=new", "--window-size=1280,800")
+		args = append(args, "--window-size=1280,800")
+		if !xvfb {
+			args = append(args, "--headless=new")
+		}
 	}
-	cmd := exec.Command(exe, append(args, o.URL)...)
+	args = append(args, o.URL)
+	cmd := exec.Command(exe, args...)
+	if xvfb {
+		cmd = exec.Command("xvfb-run", append([]string{"-a", "-s", "-screen 0 1280x800x24", exe}, args...)...)
+	}
 	detach(cmd, !o.Show)
 	if err := cmd.Start(); err != nil {
 		return Info{}, false, err
