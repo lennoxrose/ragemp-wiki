@@ -1,0 +1,11 @@
+<details class="tools-menu">
+  <summary class="tab">Tools <%= icon "chevron-down", size: 14 %></summary>
+  <div class="menu">
+    <%= link_to wiki_raw_path(page.slug) do %><%= icon "download" %>Download Markdown<% end %>
+    <button type="button" data-copy="<%= request.base_url %><%= wiki_page_path(page.slug) %>" data-keep="1"><%= icon "copy" %>Copy link</button>
+    <% if page.source_url %>
+      <%= link_to page.source_url, target: "_blank", rel: "noopener noreferrer" do %><%= icon "arrow-up-right" %>Open on wiki.rage.mp<% end %>
+      <%= link_to "https://wiki.rage.mp/index.php?title=#{ERB::Util.url_encode(page.title)}&action=history", target: "_blank", rel: "noopener noreferrer" do %><%= icon "clock" %>View history<% end %>
+    <% end %>
+  </div>
+</details>

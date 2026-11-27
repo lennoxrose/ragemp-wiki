@@ -1,0 +1,56 @@
+<% content_for :title, page_title(@page.title) %>
+<% content_for :tabs do %>
+  <%= render "pages/tabs", page: @page, active: :read %>
+<% end %>
+
+<div class="article-layout">
+  <nav class="toc" aria-label="Contents">
+    <div class="eyebrow">Contents</div>
+    <ol>
+      <li><a href="#top" class="is-active">Overview</a></li>
+      <% @render.toc.each do |h| %><li class="lvl-<%= h[:level] %>"><a href="#<%= h[:id] %>"><%= h[:text] %></a></li><% end %>
+      <% if @links_out.any? || @links_in.any? %><li><a href="#see-also">See also</a></li><% end %>
+    </ol>
+  </nav>
+
+  <article class="article" id="top">
+    <div class="crumbs">
+      <%= link_to "Wiki", root_path %><%= icon "chevron-right", size: 12 %><%= link_to @page.category, category_path(@page.category) %>
+    </div>
+    <h1><%= @page.title %></h1>
+    <% if @page.file_missing? %>
+      <p class="flash error">The Markdown file for this page is missing from the wiki folder. Run a sync to restore it.</p>
+    <% else %>
+      <div class="prose"><%= @render.html %></div>
+    <% end %>
+
+    <% if @links_out.any? || @links_in.any? %>
+      <section id="see-also" class="see-also">
+        <h2>See also</h2>
+        <% if @links_out.any? %>
+          <div class="eyebrow">Links to (<%= @page.out_slugs.size %>)</div>
+          <ul class="links"><% @links_out.each do |p| %><li><%= link_to p.title, wiki_page_path(p.slug) %></li><% end %></ul>
+        <% end %>
+        <% if @links_in.any? %>
+          <div class="eyebrow">Linked from (<%= @page.in_slugs.size %>)</div>
+          <ul class="links"><% @links_in.each do |p| %><li><%= link_to p.title, wiki_page_path(p.slug) %></li><% end %></ul>
+        <% end %>
+      </section>
+    <% end %>
+    <p class="source-meta muted">Read from <code><%= @page.path %></code></p>
+  </article>
+
+  <aside class="infobox card" aria-label="About this page">
+    <div class="info-title"><%= @page.title %></div>
+    <dl>
+      <div><dt>Category</dt><dd><%= link_to @page.category, category_path(@page.category) %></dd></div>
+      <% extra = @page.categories - [@page.category] %>
+      <% if extra.any? %><div><dt>Also in</dt><dd><%= safe_join(extra.map { |c| Wiki.library.category_names.include?(c) ? link_to(c, category_path(c)) : c }, ", ") %></dd></div><% end %>
+      <div><dt>Links to</dt><dd><%= @page.out_slugs.size %></dd></div>
+      <div><dt>Linked from</dt><dd><%= @page.in_slugs.size %></dd></div>
+      <div><dt>Words</dt><dd><%= delimited(@page.word_count) %></dd></div>
+      <div><dt>Revision</dt><dd><%= @page.revid %></dd></div>
+      <div><dt>Synced</dt><dd><%= time_ago(@page.fetched_at) %></dd></div>
+    </dl>
+  </aside>
+</div>

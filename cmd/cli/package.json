@@ -1,0 +1,24 @@
+{
+  "name": "wikisync-cli",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.tsx",
+    "typecheck": "tsc --noEmit",
+    "build:exe": "node build/build-exe.mjs"
+  },
+  "dependencies": {
+    "ink": "^8.0.0",
+    "ink-spinner": "^5.0.0",
+    "react": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.7",
+    "@types/react": "^19.3.1",
+    "esbuild": "^0.28.2",
+    "postject": "1.0.0-alpha.6",
+    "rcedit": "^5.0.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

@@ -1,0 +1,105 @@
+<% content_for :title, page_title("Discussion: #{@page_title}") %>
+<% content_for :tabs do %>
+  <% if @page %>
+    <%= render "pages/tabs", page: @page, active: :discussion %>
+  <% else %>
+    <%= render "shared/tabs", left: [["Main Page", root_path, false], ["Discussion", wiki_discussion_path(TopicsController::MAIN_PAGE), true], ["Map", map_path, false]], right: [] %>
+  <% end %>
+<% end %>
+
+<div class="discussion">
+  <div class="discussion-main">
+    <div class="crumbs">
+      <% if @page %><%= link_to @page.title, wiki_page_path(@page.slug) %><% else %><%= link_to "Main Page", root_path %><% end %><%= icon "chevron-right", size: 12 %><span>Discussion</span>
+    </div>
+    <header class="page-head">
+      <h1>Discussion</h1>
+      <p class="muted">Talk page for <%= @page_title %> · <%= pluralize(@counts["all"], "topic") %><%= " · last activity #{time_ago(@last_activity)}" if @last_activity %></p>
+    </header>
+
+    <div class="toolbar">
+      <nav class="filters" aria-label="Filter topics">
+        <% [["all", "All"], ["open", "Open"], ["resolved", "Resolved"]].each do |key, label| %>
+          <%= link_to "#{label} · #{@counts[key]}", wiki_discussion_path(@slug, filter: (key == "all" ? nil : key)), class: ["filter", ("is-active" if @filter == key)] %>
+        <% end %>
+      </nav>
+      <button class="btn btn-primary" type="button" data-open="new-topic">New topic</button>
+    </div>
+
+    <% @topics.each do |topic| %>
+      <% root = topic.posts.find { |p| p.parent_id.nil? } %>
+      <% replies = topic.posts.select { |p| p.parent_id }.sort_by(&:id) %>
+      <article class="topic card" id="topic-<%= topic.id %>">
+        <header class="topic-head">
+          <h2><%= topic.title %></h2>
+          <div class="topic-flags">
+            <%= chip "Pinned", accent: true if topic.pinned %>
+            <%= chip(topic.resolved? ? "Resolved" : "Open") %>
+            <% if topic.user_id == current_user.id || current_user.editor? %>
+              <details class="tools-menu">
+                <summary class="btn btn-icon" aria-label="Topic actions"><%= icon "ellipsis" %></summary>
+                <div class="menu">
+                  <%= button_to topic_path(topic, status: topic.resolved? ? "open" : "resolved"), method: :patch do %><%= icon "circle-check" %><%= topic.resolved? ? "Reopen topic" : "Mark as resolved" %><% end %>
+                  <% if current_user.editor? %><%= button_to topic_path(topic, pinned: topic.pinned ? "0" : "1"), method: :patch do %><%= icon "pin" %><%= topic.pinned ? "Unpin" : "Pin to top" %><% end %><% end %>
+                  <% if current_user.admin? %><%= button_to topic_path(topic), method: :delete, class: "danger" do %><%= icon "trash-2" %>Delete topic<% end %><% end %>
+                </div>
+              </details>
+            <% end %>
+          </div>
+        </header>
+
+        <% if root %>
+          <div class="post-wrap">
+            <%= render "topics/post", post: root, size: 40, liked: @liked.include?(root.id), stem: replies.any? %>
+            <% if replies.any? %>
+              <div class="replies">
+                <% replies.each do |reply| %><div class="reply"><%= render "topics/post", post: reply, size: 32, liked: @liked.include?(reply.id), stem: false %></div><% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <details class="reply-box">
+          <summary class="btn"><%= icon "reply" %>Reply</summary>
+          <%= form_with url: topic_posts_path(topic), class: "reply-form" do %>
+            <label class="sr-only" for="reply-<%= topic.id %>">Your reply</label>
+            <textarea id="reply-<%= topic.id %>" name="body" rows="3" maxlength="5000" placeholder="Write a message." required></textarea>
+            <div class="form-actions"><button class="btn btn-primary" type="submit">Post reply</button></div>
+          <% end %>
+        </details>
+      </article>
+    <% end %>
+
+    <% if @topics.empty? %>
+      <section class="card empty-state"><h2>No topics yet</h2><p class="muted">Start the conversation about <%= @page_title %>: ask a question, report a mistake or suggest an improvement.</p><button class="btn btn-primary" type="button" data-open="new-topic">New topic</button></section>
+    <% end %>
+  </div>
+
+  <aside class="discussion-rail">
+    <section class="card rail-card">
+      <h3>Discussion guidelines</h3>
+      <ul class="check-list">
+        <% ["Stay on topic for this page", "Be specific, include versions and code", "Mark topics resolved when fixed", "Keep it respectful"].each do |g| %><li><%= icon "circle-check", css: "accent" %><span><%= g %></span></li><% end %>
+      </ul>
+    </section>
+    <% if @participants.any? %>
+      <section class="card rail-card">
+        <h3>Participants</h3>
+        <ul class="people">
+          <% @participants.each do |u| %>
+            <li><%= avatar_tag(u, size: 32) %><div><%= link_to u.name, member_path(u.username), class: "person" %><div class="muted small"><%= u.role_label %></div></div></li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+  </aside>
+</div>
+
+<dialog id="new-topic" aria-labelledby="new-topic-title">
+  <%= form_with url: wiki_topics_path(@slug), class: "dialog-body" do %>
+    <header class="dialog-head"><span class="dialog-icon"><%= icon "message-square", size: 22 %></span><div><h2 id="new-topic-title">New topic</h2><p class="muted">About <%= @page_title %></p></div></header>
+    <div class="field"><label for="topic-title">Title</label><input type="text" id="topic-title" name="title" maxlength="140" required placeholder="Does kick() trigger the playerQuit event?"></div>
+    <div class="field"><label for="topic-body">Message</label><textarea id="topic-body" name="body" rows="5" maxlength="5000" required placeholder="Add the details, versions and code that help others answer."></textarea></div>
+    <div class="form-actions"><button class="btn" type="button" data-close>Cancel</button><button class="btn btn-primary" type="submit">Post topic</button></div>
+  <% end %>
+</dialog>

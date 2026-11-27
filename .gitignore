@@ -1,0 +1,33 @@
+# Secrets
+.env
+.env.*
+!.env.example
+configs/kubernetes/secret.yaml
+
+# Build output and generated wiki content (wikisync writes dist/)
+/bin/
+/dist/
+*.exe
+*.dll
+*.dll.h
+*.so
+/cmd/cli/build/tmp/
+
+# Dependencies
+node_modules/
+
+# Rails runtime (web/)
+/web/log/*
+/web/tmp/*
+/web/storage/*
+/web/public/assets/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+
+# Chromium profile used by wikisync (cookies, caches)
+/tools/.profile/

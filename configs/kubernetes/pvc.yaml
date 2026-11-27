@@ -1,0 +1,10 @@
+# Holds WIKI_ROOT (the Markdown the wiki reads) and Rails storage/.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wiki-data
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 5Gi

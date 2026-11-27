@@ -1,0 +1,15 @@
+<%# local: user %>
+<%= link_to member_path(user.username), class: "mini-profile card" do %>
+  <div class="banner-wrap">
+    <div class="banner">
+      <% if user.banner.attached? %><%= image_tag url_for(user.banner), alt: "" %><% else %><%= image_tag "logo-r.svg", alt: "", class: "banner-mark" %><% end %>
+    </div>
+    <div class="mini-avatar"><%= avatar_tag(user, size: 72) %></div>
+  </div>
+  <div class="mini-info">
+    <div class="name-line"><strong><%= user.name %></strong><%= role_chip(user) %></div>
+    <div class="muted">@<%= user.username %></div>
+    <% if user.bio.present? %><p><%= truncate(user.bio, length: 90) %></p><% end %>
+    <div class="muted small"><%= pluralize(Topic.where(user_id: user.id).count, "discussion") %> · <%= pluralize(Post.where(user_id: user.id).count, "post") %></div>
+  </div>
+<% end %>

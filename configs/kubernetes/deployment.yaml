@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ragemp-wiki
+spec:
+  # One replica: the sync scheduler runs inside the server and the volume is ReadWriteOnce.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: { app: ragemp-wiki }
+  template:
+    metadata:
+      labels: { app: ragemp-wiki }
+    spec:
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+        - name: migrate
+          image: ragemp-wiki
+          command: ["bin/rails", "db:prepare"]
+          envFrom: [{ secretRef: { name: ragemp-wiki } }]
+      containers:
+        - name: web
+          image: ragemp-wiki
+          ports:
+            - containerPort: 3000
+          envFrom: [{ secretRef: { name: ragemp-wiki } }]
+          env:
+            # wikisync + Chromium are in the image, so syncs run in this pod.
+            # To use an external agent through /api/v2 instead, add SYNC_RUNNER=agent.
+          volumeMounts:
+            - { name: data, mountPath: /data/dist, subPath: dist }
+            - { name: data, mountPath: /app/storage, subPath: storage }
+          # TCP probes: force_ssl would 301 plain-HTTP HTTP probes.
+          readinessProbe:
+            tcpSocket: { port: 3000 }
+            initialDelaySeconds: 10
+          livenessProbe:
+            tcpSocket: { port: 3000 }
+            initialDelaySeconds: 30
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { memory: 2Gi }   # Chromium needs headroom while syncing
+      volumes:
+        - name: data
+          persistentVolumeClaim: { claimName: wiki-data }

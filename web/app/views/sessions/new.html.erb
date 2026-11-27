@@ -1,0 +1,9 @@
+<%= form_with url: login_path, class: "form auth-form" do |f| %>
+  <div class="logo"><%= image_tag "logo-r.svg", alt: "RAGE Multiplayer", width: 72, height: 68 %></div>
+  <% if flash.now[:error] %><p class="error" role="alert"><%= flash.now[:error] %></p><% end %>
+  <%= f.email_field :email, placeholder: "Email", autocomplete: "email", required: true, value: params[:email], aria: { label: "Email" } %>
+  <%= f.password_field :password, placeholder: "Password", autocomplete: "current-password", required: true, aria: { label: "Password" } %>
+  <%= render "shared/turnstile" %>
+  <%= f.submit "Login" %>
+  <%= link_to "Don't have an account? Register", register_path, class: "switch" %>
+<% end %>

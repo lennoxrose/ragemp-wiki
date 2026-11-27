@@ -1,0 +1,141 @@
+<% content_for :title, page_title("Settings") %>
+<% content_for :tabs do %><%= render "accounts/tabs", active: :settings %><% end %>
+
+<div class="account-page settings-page">
+  <header class="page-head"><h1>Settings</h1><p class="muted">Manage your profile, sign-in details and how the wiki looks and notifies you.</p></header>
+
+  <div class="settings-layout">
+    <nav class="settings-nav" aria-label="Settings sections">
+      <% [["profile", "Profile"], ["account", "Account"], ["appearance", "Appearance"], ["notifications", "Notifications"], ["sessions", "Sessions"], ["danger", "Danger zone"]].each do |id, label| %>
+        <a href="#<%= id %>" class="<%= "danger" if id == "danger" %>"><%= label %></a>
+      <% end %>
+    </nav>
+
+    <div class="settings-stack">
+      <section class="card settings-card" id="profile">
+        <header><h2>Profile</h2><p class="muted">This is shown on your profile and next to your discussion posts.</p></header>
+        <%= form_with url: settings_profile_path, method: :patch, multipart: true, class: "settings-body" do %>
+          <div class="field">
+            <span class="label">Banner</span>
+            <div class="banner-edit">
+              <div class="banner"><% if current_user.banner.attached? %><%= image_tag url_for(current_user.banner), alt: "" %><% else %><%= image_tag "logo-r.svg", alt: "", class: "banner-mark" %><% end %></div>
+              <div class="banner-actions">
+                <input type="file" name="banner" id="banner-file" accept="image/jpeg,image/png,image/webp" class="file-input">
+                <% if current_user.banner.attached? %><label class="radio"><input type="checkbox" name="remove_banner" value="1"><span class="mark square"></span>Remove banner</label><% end %>
+                <span class="hint">600 × 240 recommended<br>JPG, PNG or WebP, up to 5 MB</span>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <span class="label">Profile picture</span>
+            <div class="avatar-edit">
+              <%= avatar_tag(current_user, size: 96) %>
+              <div class="banner-actions">
+                <input type="file" name="avatar" id="avatar-file" accept="image/jpeg,image/png,image/webp" class="file-input">
+                <% if current_user.avatar.attached? %><label class="radio"><input type="checkbox" name="remove_avatar" value="1"><span class="mark square"></span>Remove picture</label><% end %>
+                <span class="hint">Square, at least 256 × 256</span>
+              </div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label for="display_name">Display name</label><input type="text" id="display_name" name="display_name" value="<%= current_user.display_name %>" maxlength="60" placeholder="<%= current_user.username %>"></div>
+            <div class="field"><label for="username">Username</label><div class="input-prefix"><span>@</span><input type="text" id="username" name="username" value="<%= current_user.username %>" required pattern="[a-z0-9_]{2,30}"></div><span class="hint">Letters, numbers and underscores</span></div>
+          </div>
+          <div class="field"><label for="bio">Bio</label><textarea id="bio" name="bio" maxlength="160" rows="3"><%= current_user.bio %></textarea><span class="hint">Up to 160 characters</span></div>
+          <div class="form-actions"><button class="btn btn-primary" type="submit">Save changes</button></div>
+        <% end %>
+      </section>
+
+      <section class="card settings-card" id="account">
+        <header><h2>Account</h2><p class="muted">Your sign-in details.</p></header>
+        <div class="settings-body">
+          <%= form_with url: settings_email_path, method: :patch, class: "stack-form" do %>
+            <div class="grid-2">
+              <div class="field"><label for="email">Email address</label><input type="email" id="email" name="email" value="<%= current_user.email %>" required><span class="hint">Used to sign in</span></div>
+              <div class="field"><label for="email-password">Current password</label><input type="password" id="email-password" name="current_password" autocomplete="current-password" required><span class="hint">Needed to change your email</span></div>
+            </div>
+            <div class="form-actions"><button class="btn" type="submit">Change email</button></div>
+          <% end %>
+          <hr>
+          <%= form_with url: settings_password_path, method: :patch, class: "stack-form" do %>
+            <h3>Change password</h3>
+            <div class="field"><label for="current_password">Current password</label><input type="password" id="current_password" name="current_password" autocomplete="current-password" required></div>
+            <div class="grid-2">
+              <div class="field"><label for="password">New password</label><input type="password" id="password" name="password" autocomplete="new-password" minlength="8" required><span class="hint">At least 8 characters</span></div>
+              <div class="field"><label for="password_confirmation">Confirm new password</label><input type="password" id="password_confirmation" name="password_confirmation" autocomplete="new-password" minlength="8" required></div>
+            </div>
+            <div class="form-actions"><button class="btn btn-primary" type="submit">Update password</button></div>
+          <% end %>
+        </div>
+      </section>
+
+      <section class="card settings-card" id="appearance">
+        <header><h2>Appearance</h2><p class="muted">Applies to every page of the wiki on this account.</p></header>
+        <%= form_with url: appearance_path, method: :patch, data: { autosubmit: true }, class: "settings-body" do %>
+          <div class="field"><span class="label">Text size</span>
+            <div class="option-cards">
+              <% [["small", "Small", 14], ["standard", "Standard", 18], ["large", "Large", 22]].each do |value, label, size| %>
+                <label class="option"><input type="radio" name="text_size" value="<%= value %>" <%= "checked" if current_user.pref(:text_size) == value %>><span class="sample" style="font-size:<%= size %>px">Aa</span><span class="mark"></span><span class="opt-label"><%= label %></span></label>
+              <% end %>
+            </div>
+          </div>
+          <div class="field"><span class="label">Page width</span>
+            <div class="option-cards two">
+              <% [["standard", "Standard", "1280 px"], ["wide", "Wide", "Full width"]].each do |value, label, sample| %>
+                <label class="option"><input type="radio" name="page_width" value="<%= value %>" <%= "checked" if current_user.pref(:page_width) == value %>><span class="sample small-sample"><%= sample %></span><span class="mark"></span><span class="opt-label"><%= label %></span></label>
+              <% end %>
+            </div>
+          </div>
+          <noscript><button class="btn" type="submit">Save</button></noscript>
+        <% end %>
+      </section>
+
+      <section class="card settings-card" id="notifications">
+        <header><h2>Notifications</h2><p class="muted">Choose what we email you about.</p></header>
+        <%= form_with url: settings_notifications_path, method: :patch, data: { autosubmit: true }, class: "settings-body toggles" do %>
+          <% [["notify_replies", "Replies to my discussions", "When someone replies to a topic you started or posted in"], ["notify_mentions", "Mentions", "When someone mentions @#{current_user.username} in a discussion"], ["notify_announcements", "Admin announcements", "Wiki maintenance and important changes"], ["notify_digest", "Weekly digest", "A summary of new and changed pages every Monday"]].each do |key, title, sub| %>
+            <div class="toggle-row">
+              <div><strong id="l-<%= key %>"><%= title %></strong><div class="muted small"><%= sub %></div></div>
+              <input type="hidden" name="<%= key %>" id="in-<%= key %>" value="<%= current_user.pref(key) ? "1" : "0" %>">
+              <button type="button" class="toggle" role="switch" aria-checked="<%= current_user.pref(key) %>" aria-labelledby="l-<%= key %>" data-toggle-input="#in-<%= key %>"></button>
+            </div>
+          <% end %>
+          <noscript><button class="btn" type="submit">Save</button></noscript>
+        <% end %>
+      </section>
+
+      <section class="card settings-card" id="sessions">
+        <header><h2>Sessions</h2><p class="muted">Devices that are currently signed in to your account.</p></header>
+        <div class="settings-body">
+          <ul class="session-list">
+            <% @sessions.each do |s| %>
+              <% here = s.id == current_session.id %>
+              <li>
+                <span class="session-icon"><%= icon(s.mobile? ? "smartphone" : "monitor", size: 20) %></span>
+                <div class="session-text"><div class="name-line"><strong><%= s.device %></strong><%= chip("This device", accent: true) if here %></div><div class="muted small"><%= s.ip %> · <%= here ? "Active now" : time_ago(s.last_active_at) %></div></div>
+                <% unless here %><%= button_to "Sign out", settings_session_path(s), method: :delete, class: "btn" %><% end %>
+              </li>
+            <% end %>
+          </ul>
+          <% if @sessions.size > 1 %><div class="form-actions"><%= button_to "Sign out of all other devices", settings_sessions_path, method: :delete, class: "btn" %></div><% end %>
+        </div>
+      </section>
+
+      <section class="danger-zone" id="danger">
+        <div>
+          <h2><%= icon "triangle-alert", size: 18 %>Danger zone</h2>
+          <p class="muted">Deleting your account removes your profile, API tokens and sessions. Your discussion posts stay, shown as “Deleted user”. This cannot be undone.</p>
+        </div>
+        <button class="btn btn-danger" type="button" data-open="delete-account">Delete account</button>
+      </section>
+    </div>
+  </div>
+</div>
+
+<dialog id="delete-account" aria-labelledby="delete-title">
+  <%= form_with url: delete_account_path, method: :delete, class: "dialog-body" do %>
+    <header class="dialog-head"><span class="dialog-icon danger"><%= icon "triangle-alert", size: 22 %></span><div><h2 id="delete-title">Delete your account?</h2><p class="muted">Enter your password to confirm. This cannot be undone.</p></div></header>
+    <div class="field"><label for="delete-password">Password</label><input type="password" id="delete-password" name="current_password" autocomplete="current-password" required></div>
+    <div class="form-actions"><button class="btn" type="button" data-close>Cancel</button><button class="btn btn-danger" type="submit">Delete account</button></div>
+  <% end %>
+</dialog>

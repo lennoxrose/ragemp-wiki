@@ -1,0 +1,9 @@
+<% if signed_in? %>
+  <section class="not-found">
+    <h1>Page not found</h1>
+    <p class="muted">There is nothing at this address. It may have been renamed or removed in the last sync.</p>
+    <p><%= link_to "Back to the main page", root_path, class: "btn btn-primary" %></p>
+  </section>
+<% else %>
+  <div class="auth-form"><h1>Page not found</h1><%= link_to "Sign in", login_path, class: "switch" %></div>
+<% end %>

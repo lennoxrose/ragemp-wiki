@@ -1,0 +1,22 @@
+<%# locals: stats, activity %>
+<div class="stat-row">
+  <div class="card stat"><b><%= delimited(stats[:topics]) %></b><span>Discussions</span></div>
+  <div class="card stat"><b><%= delimited(stats[:replies]) %></b><span>Replies</span></div>
+  <div class="card stat"><b><%= delimited(stats[:likes]) %></b><span>Likes received</span></div>
+</div>
+<section class="card activity">
+  <h3>Recent activity</h3>
+  <% if activity.empty? %>
+    <p class="muted empty">Nothing yet. Start a discussion on any page to see it here.</p>
+  <% else %>
+    <ul>
+      <% activity.each do |a| %>
+        <li>
+          <%= icon a[:icon] %>
+          <span class="what"><%= link_to a[:text], wiki_discussion_path(a[:page]) %></span>
+          <time class="muted"><%= time_ago(a[:at]) %></time>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>

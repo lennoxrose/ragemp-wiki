@@ -1,0 +1,17 @@
+<header class="site-header">
+  <div class="bar">
+    <%= link_to root_path, class: "brand", "aria-label": "RAGE Multiplayer wiki home" do %><%= image_tag "logo-r.svg", alt: "" %><span>AGE Multiplayer</span><% end %>
+    <%= form_with url: search_path, method: :get, class: "header-search", role: "search" do %>
+      <%= icon "search" %>
+      <input type="search" name="q" id="site-search" value="<%= params[:q] if controller_name == "search" %>" placeholder="Search the wiki" aria-label="Search the wiki" autocomplete="off">
+      <kbd aria-hidden="true">/</kbd>
+    <% end %>
+    <nav class="account-nav" aria-label="Account">
+      <% if current_user&.admin? %>
+        <%= link_to admin_root_path, class: "admin-link" do %><%= icon "shield-check", css: "accent" %>Admin<% end %>
+      <% end %>
+      <%= link_to account_path, "aria-label": "Your account", title: current_user&.name do %><%= avatar_tag(current_user, size: 32) %><% end %>
+      <%= button_to "Log out", logout_path, method: :delete, class: "link-button", form: { style: "margin:0" } %>
+    </nav>
+  </div>
+</header>

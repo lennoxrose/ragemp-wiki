@@ -1,0 +1,25 @@
+<% content_for :title, page_title(@query.present? ? "Search: #{@query}" : "Search") %>
+<% content_for :tabs do %>
+  <%= render "shared/tabs", left: [["Main Page", root_path, false], ["Search", search_path(q: @query), true]], right: [] %>
+<% end %>
+
+<section class="search-page">
+  <h1>Search</h1>
+  <% if @query.blank? %>
+    <p class="muted">Type a page name, a function such as <code>Player::kick</code>, or a word from the documentation.</p>
+  <% else %>
+    <p class="muted"><%= pluralize(@results.size, "result") %> for “<%= @query %>”</p>
+    <ul class="results">
+      <% @results.each do |p| %>
+        <li class="card result">
+          <div class="result-head">
+            <%= link_to p.title, wiki_page_path(p.slug), class: "result-title" %>
+            <%= link_to category_path(p.category), class: "chip" do %><span class="dot" style="background: <%= category_color(p.category) %>"></span><%= p.category %><% end %>
+          </div>
+          <% if p.summary.present? %><p class="muted"><%= truncate(strip_tags(p.summary), length: 180) %></p><% end %>
+        </li>
+      <% end %>
+    </ul>
+    <% if @results.empty? %><p>Nothing matches “<%= @query %>”. Check the spelling or try a shorter word.</p><% end %>
+  <% end %>
+</section>

@@ -1,0 +1,18 @@
+# Apply once:  kubectl apply -n argocd -f configs/argocd/application.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ragemp-wiki
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.rigkit.org/1337/ragemp-wiki.git
+    targetRevision: main
+    path: configs/kubernetes
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ragemp-wiki
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true]

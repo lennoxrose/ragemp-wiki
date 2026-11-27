@@ -1,0 +1,13 @@
+{
+  "name": "ragemp-wiki",
+  "private": true,
+  "scripts": {
+    "setup": "powershell -ExecutionPolicy Bypass -File tools/setup.ps1",
+    "build:all":"node tools/compile.mjs",
+    "build": "go build -o bin/wikisync.exe ./cmd/wikisync",
+    "build:dll": "go build -buildmode=c-shared -o bin/wikisync-chromium.dll ./cmd/chromiumdll && go build -buildmode=c-shared -o bin/wikisync-useragent.dll ./cmd/useragentdll",
+    "build:cli": "cd cmd/cli && pnpm run build:exe",
+    "cli": "cd cmd/cli && pnpm start",
+    "chromium": "go run ./cmd/chromium"
+  }
+}

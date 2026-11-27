@@ -1,0 +1,18 @@
+<% content_for :title, page_title("Contributions") %>
+<% content_for :tabs do %><%= render "accounts/tabs", active: :contributions %><% end %>
+
+<div class="account-page">
+  <header class="page-head"><h1>Contributions</h1><p class="muted">Discussions you started and replies you wrote.</p></header>
+  <div class="contrib-grid">
+    <section class="card activity"><h3>Discussions (<%= @topics.size %>)</h3>
+      <% if @topics.empty? %><p class="muted empty">You have not started a discussion yet.</p><% else %>
+        <ul><% @topics.each do |t| %><li><%= icon "message-square" %><span class="what"><%= link_to t.title, wiki_discussion_path(t.page_slug) %><span class="muted small"> on <%= t.page_slug.tr("_", " ") %></span></span><time class="muted"><%= time_ago(t.created_at) %></time></li><% end %></ul>
+      <% end %>
+    </section>
+    <section class="card activity"><h3>Posts (<%= @posts.size %>)</h3>
+      <% if @posts.empty? %><p class="muted empty">You have not posted yet.</p><% else %>
+        <ul><% @posts.each do |p| %><li><%= icon "reply" %><span class="what"><%= link_to truncate(p.body, length: 90), wiki_discussion_path(p.topic.page_slug) %><span class="muted small"> in <%= p.topic.title %></span></span><time class="muted"><%= time_ago(p.created_at) %></time></li><% end %></ul>
+      <% end %>
+    </section>
+  </div>
+</div>

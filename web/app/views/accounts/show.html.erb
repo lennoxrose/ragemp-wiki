@@ -1,0 +1,23 @@
+<% content_for :title, page_title("Account") %>
+<% content_for :tabs do %><%= render "accounts/tabs", active: :overview %><% end %>
+
+<div class="account-page">
+  <header class="page-head">
+    <h1>Account</h1>
+    <p class="muted">Your profile and activity. This is how other members see you.</p>
+  </header>
+
+  <div class="profile-columns">
+    <%= render "members/profile_card", user: @profile, own: true %>
+    <div class="profile-side"><%= render "members/side", stats: @stats, activity: @activity %></div>
+  </div>
+
+  <%= render "accounts/tokens", tokens: @tokens, new_token: @new_token %>
+
+  <% if @others.any? %>
+    <section class="others">
+      <h2>Other profiles</h2>
+      <div class="mini-grid"><% @others.each do |u| %><%= render "members/mini_card", user: u %><% end %></div>
+    </section>
+  <% end %>
+</div>

@@ -1,0 +1,46 @@
+<% content_for :title, page_title("Map") %>
+<% content_for :body_class, "map-body" %>
+<% content_for :head do %><%= javascript_include_tag "vendor/d3.min", "map", defer: true %><% end %>
+<% content_for :tabs do %>
+  <% if @focus %>
+    <% label = @focus.title.length > 30 ? "#{@focus.title.first(29)}…" : @focus.title %>
+    <%= render "shared/tabs",
+          left: [[label, wiki_page_path(@focus.slug), false], ["Discussion", wiki_discussion_path(@focus.slug), false], ["Map", map_path(focus: @focus.slug), true]],
+          right: [["Global graph", map_path(focus: @focus.slug), !@local], ["Local graph", map_path(focus: @focus.slug, local: 1), @local]] %>
+  <% else %>
+    <%= render "shared/tabs",
+          left: [["Main Page", root_path, false], ["Discussion", wiki_discussion_path(TopicsController::MAIN_PAGE), false], ["Map", map_path, true]],
+          right: [["Global graph", map_path, true]] %>
+  <% end %>
+<% end %>
+
+<section class="map-page">
+  <header class="map-intro">
+    <div>
+      <h1>Map</h1>
+      <p class="muted">Every page is a dot and every link between pages is a line. Scroll to zoom, drag the background to pan, drag a dot to move it, and click one to see what it connects to.</p>
+    </div>
+  </header>
+
+  <div class="map-stage" id="map-stage" data-graph-url="<%= api_v1_graph_path %>" data-search-url="<%= api_v1_search_path %>" data-focus="<%= @focus&.slug %>" data-local="<%= @local ? "1" : "0" %>" data-wiki-base="/wiki/" data-category-base="/categories/">
+    <canvas id="map-canvas" role="img" aria-label="Interactive graph of wiki pages and the links between them"></canvas>
+
+    <div class="map-search panel-box">
+      <label class="map-field" for="map-search">
+        <%= icon "search" %>
+        <input id="map-search" type="search" placeholder="Search the map" autocomplete="off" aria-controls="map-results">
+        <kbd aria-hidden="true">/</kbd>
+      </label>
+      <ul id="map-results" class="map-results" hidden></ul>
+    </div>
+    <div class="map-chips" id="map-chips"></div>
+
+    <div class="map-zoom panel-box">
+      <button type="button" id="zoom-in" aria-label="Zoom in"><%= icon "plus", size: 18 %></button>
+      <button type="button" id="zoom-out" aria-label="Zoom out"><%= icon "minus", size: 18 %></button>
+      <button type="button" id="zoom-fit" aria-label="Fit the graph to the view"><%= icon "maximize", size: 18 %></button>
+    </div>
+    <div class="map-status" id="map-status" role="status">Loading the map…</div>
+    <div class="map-hint" id="map-hint" role="status" aria-live="polite" hidden></div>
+  </div>
+</section>

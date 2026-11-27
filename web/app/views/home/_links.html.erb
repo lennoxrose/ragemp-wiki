@@ -1,0 +1,11 @@
+<ul class="links">
+  <% items.each do |item| %>
+    <li>
+      <% if item.external %>
+        <%= external_link_to item.label, item.href %>
+      <% else %>
+        <%= link_to item.label, item.href %><% if item.count %> <span class="count"><%= delimited(item.count) %></span><% end %>
+      <% end %>
+    </li>
+  <% end %>
+</ul>

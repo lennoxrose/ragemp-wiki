@@ -1,0 +1,58 @@
+<% content_for :title, page_title %>
+<% content_for :tabs do %>
+  <%= render "shared/tabs", left: [["Main Page", root_path, true], ["Discussion", wiki_discussion_path("Main_Page"), false], ["Map", map_path, false]], right: [["Read", root_path, true]] %>
+<% end %>
+
+<div class="home">
+  <div class="home-main">
+    <section class="hero">
+      <%= image_tag "ragemp-banner.svg", alt: "RAGE Multiplayer", width: 440, class: "hero-banner" %>
+      <div class="hero-actions">
+        <%= link_to "https://rage.mp/", target: "_blank", rel: "noopener noreferrer", class: "btn btn-primary btn-lg" do %>Download RAGE Multiplayer<% end %>
+        <% if Wiki.library.slug?("Getting_Started_with_Server") %><%= link_to "Installation guide", wiki_page_path("Getting_Started_with_Server"), class: "btn btn-lg" %><% end %>
+      </div>
+      <div class="ornament" aria-hidden="true"><span></span><i></i><span></span></div>
+      <p class="hero-count"><%= delimited(@page_count) %> pages in <%= @category_count %> categories</p>
+    </section>
+
+    <div class="sections">
+      <% [@left, @right].each do |column| %>
+        <div class="sections-col">
+          <% column.each do |card| %>
+            <section class="wcard card">
+              <h2><%= icon card[:icon], size: 24, css: "accent" %><span><%= card[:title] %></span></h2>
+              <% if card[:intro] %><p class="intro"><%= card[:intro] %></p><% end %>
+              <% if card[:items] %>
+                <%= render "home/links", items: card[:items] %>
+              <% end %>
+              <% card[:groups]&.each do |name, items| %>
+                <div class="eyebrow"><%= name %></div>
+                <%= render "home/links", items: items %>
+              <% end %>
+            </section>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <aside class="rail" aria-label="Appearance">
+    <%= form_with url: appearance_path, method: :patch, data: { autosubmit: true }, class: "appearance" do %>
+      <div class="rail-head"><strong>Appearance</strong></div>
+      <fieldset>
+        <legend>Text</legend>
+        <% [["small", "Small"], ["standard", "Standard"], ["large", "Large"]].each do |value, label| %>
+          <label class="radio"><input type="radio" name="text_size" value="<%= value %>" <%= "checked" if current_user.pref(:text_size) == value %>><span class="mark"></span><%= label %></label>
+        <% end %>
+      </fieldset>
+      <div class="rail-sep" aria-hidden="true"></div>
+      <fieldset>
+        <legend>Width</legend>
+        <% [["standard", "Standard"], ["wide", "Wide"]].each do |value, label| %>
+          <label class="radio"><input type="radio" name="page_width" value="<%= value %>" <%= "checked" if current_user.pref(:page_width) == value %>><span class="mark"></span><%= label %></label>
+        <% end %>
+      </fieldset>
+      <noscript><button class="btn" type="submit">Save</button></noscript>
+    <% end %>
+  </aside>
+</div>

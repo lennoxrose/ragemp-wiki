@@ -1,0 +1,119 @@
+<% content_for :title, page_title("Accounts") %>
+
+<header class="admin-title">
+  <div>
+    <h1>Accounts</h1>
+    <p class="muted">Manage members, roles and invite codes. Only administrators can see this page.</p>
+  </div>
+  <div class="admin-controls"><%= button_to "Generate invite code", admin_invites_path, method: :post, class: "btn btn-primary" %></div>
+</header>
+
+<section class="kpi-strip four card">
+  <div class="kpi"><div class="eyebrow">Total accounts</div><b><%= @counts[:all] %></b></div>
+  <div class="kpi"><div class="eyebrow">Administrators</div><b><%= @counts[:admin] %></b></div>
+  <div class="kpi"><div class="eyebrow">Disabled</div><b><%= @counts[:disabled] %></b></div>
+  <div class="kpi"><div class="eyebrow">Unused invite codes</div><b><%= @unused_invites %></b></div>
+</section>
+
+<div class="admin-columns">
+  <section class="card members-table">
+    <div class="toolbar-row">
+      <%= form_with url: admin_users_path, method: :get, class: "table-search" do %>
+        <%= hidden_field_tag :filter, @filter if @filter %>
+        <%= icon "search" %><input type="search" name="q" value="<%= params[:q] %>" placeholder="Search by name or email" aria-label="Search accounts">
+      <% end %>
+      <nav class="pills" aria-label="Filter by role">
+        <% [[nil, "All", :all], ["admin", "Admins", :admin], ["editor", "Editors", :editor], ["member", "Members", :member], ["disabled", "Disabled", :disabled]].each do |value, label, key| %>
+          <%= link_to "#{label} · #{@counts[key]}", admin_users_path(filter: value, q: params[:q].presence), class: ["pill", ("is-active" if @filter == value)] %>
+        <% end %>
+      </nav>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Member</th><th>Role</th><th>Status</th><th>Last active</th><th class="col-joined">Joined</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody>
+          <% @users.each do |u| %>
+            <tr>
+              <td><div class="who"><%= avatar_tag(u, size: 36) %><div><%= link_to u.name, member_path(u.username), class: "person" %><div class="muted small"><%= u.email %></div></div></div></td>
+              <td>
+                <%= form_with url: admin_user_path(u), method: :patch, data: { autosubmit: true }, class: "role-form" do %>
+                  <label class="sr-only" for="role-<%= u.id %>">Role of <%= u.name %></label>
+                  <select id="role-<%= u.id %>" name="role" class="role-select <%= "is-admin" if u.admin? %>"><% User::ROLES.each do |r| %><option value="<%= r %>" <%= "selected" if u.role == r %>><%= User::ROLE_LABELS[r] %></option><% end %></select>
+                <% end %>
+              </td>
+              <td><span class="dot <%= u.disabled? ? "negative" : "positive" %>"></span> <%= u.disabled? ? "Disabled" : "Active" %></td>
+              <td><%= time_ago(u.last_seen_at) %></td>
+              <td class="muted col-joined"><%= u.created_at.strftime("%b %Y") %></td>
+              <td class="actions">
+                <details class="tools-menu row-menu">
+                  <summary class="btn btn-icon" aria-label="Actions for <%= u.name %>"><%= icon "ellipsis", size: 18 %></summary>
+                  <div class="menu">
+                    <%= button_to reset_password_admin_user_path(u), method: :post do %><%= icon "key-round" %>Reset password<% end %>
+                    <% if u.disabled? %>
+                      <%= button_to enable_admin_user_path(u), method: :post do %><%= icon "circle-check" %>Enable account<% end %>
+                    <% elsif u != current_user %>
+                      <%= button_to disable_admin_user_path(u), method: :post do %><%= icon "ban" %>Disable account<% end %>
+                    <% end %>
+                    <% if u != current_user %><%= button_to admin_user_path(u), method: :delete, class: "danger" do %><%= icon "trash-2" %>Delete account<% end %><% end %>
+                  </div>
+                </details>
+              </td>
+            </tr>
+          <% end %>
+          <% if @users.empty? %><tr><td colspan="6" class="muted empty">No accounts match.</td></tr><% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="pagination">
+      <span class="muted small">Showing <%= @users.empty? ? 0 : (@current - 1) * Admin::UsersController::PER_PAGE + 1 %>–<%= [(@current - 1) * Admin::UsersController::PER_PAGE + @users.size, 0].max %> of <%= @total %></span>
+      <nav class="pager-row" aria-label="Pages">
+        <% (1..@pages).each do |n| %><%= link_to n, admin_users_path(filter: @filter, q: params[:q].presence, page: n), class: ["letter", ("is-active" if n == @current)] %><% end %>
+      </nav>
+    </footer>
+  </section>
+
+  <div class="side-column">
+    <section class="card side-card">
+      <header>
+        <div><h2>Invite codes</h2><p class="muted small"><%= icon "shield-check", size: 14, css: "accent" %> Admins only</p></div>
+        <%= button_to "Generate code", admin_invites_path, method: :post, class: "btn btn-primary" %>
+      </header>
+      <ul class="invite-list">
+        <% @invites.each do |i| %>
+          <li>
+            <div><b><%= i.code %></b><div class="muted small">Created by <%= i.created_by&.name || "the command line" %> · <%= short_date(i.created_at) %></div></div>
+            <div class="invite-right">
+              <% if i.revoked? %><%= chip "Revoked" %><% elsif i.used? %><%= chip "Used by #{i.used_by&.name || "a deleted user"}" %>
+              <% else %>
+                <%= chip "Unused", accent: true %>
+                <button type="button" class="btn btn-icon" data-copy="<%= i.code %>" data-keep="1" aria-label="Copy code <%= i.code %>"><%= icon "copy", size: 16 %></button>
+                <%= button_to admin_invite_path(i), method: :delete, class: "btn btn-icon", "aria-label": "Revoke code #{i.code}" do %><%= icon "ban", size: 16 %><% end %>
+              <% end %>
+            </div>
+          </li>
+        <% end %>
+        <% if @invites.empty? %><li class="muted">No invite codes yet. Generate one to invite someone.</li><% end %>
+      </ul>
+    </section>
+
+    <section class="card side-card">
+      <header><div><h2>Admin activity</h2><p class="muted small">Who changed what</p></div></header>
+      <ul class="events">
+        <% @events.each do |e| %><li><%= icon "shield-check", size: 16 %><div><div><%= e.actor&.name || "Someone" %> <%= e.action %></div><div class="dim small"><%= time_ago(e.created_at) %></div></div></li><% end %>
+        <% if @events.empty? %><li class="muted">Nothing yet.</li><% end %>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<% if @temp_password %>
+  <dialog id="temp-password" data-open-on-load aria-labelledby="temp-title">
+    <div class="dialog-body">
+      <header class="dialog-head"><span class="dialog-icon"><%= icon "key-round", size: 22 %></span><div><h2 id="temp-title">Password reset</h2><p class="muted">Give this temporary password to <%= @temp_password["name"] %>. It is shown once and they should change it after signing in.</p></div></header>
+      <div class="token-box"><code id="temp-value"><%= @temp_password["value"] %></code><button class="btn" type="button" data-copy-target="#temp-value">Copy</button></div>
+      <div class="form-actions"><button class="btn btn-primary" type="button" data-close>Done</button></div>
+    </div>
+  </dialog>
+<% end %>

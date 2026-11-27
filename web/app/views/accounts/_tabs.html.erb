@@ -1,0 +1,4 @@
+<%# local: active — :overview, :contributions or :settings %>
+<%= render "shared/tabs",
+      left: [["Profile", account_path, active == :overview], ["Contributions", contributions_path, active == :contributions]],
+      right: [["Overview", account_path, active == :overview], ["Security", settings_path(anchor: "sessions"), false], ["Settings", settings_path, active == :settings]] %>

@@ -1,0 +1,79 @@
+<%# locals: tokens, new_token %>
+<section class="card tokens" id="tokens">
+  <header class="tokens-head">
+    <div>
+      <h2>API tokens</h2>
+      <p class="muted">Let scripts and AI agents read the wiki on your behalf. A token acts with your account’s permissions.</p>
+    </div>
+    <button class="btn btn-primary" type="button" data-open="create-token">Create token</button>
+  </header>
+
+  <div class="table-wrap">
+    <table class="table token-table">
+      <thead><tr><th>Name</th><th>Scope</th><th>Created</th><th>Last used</th><th>Expires</th><th></th></tr></thead>
+      <tbody>
+        <% tokens.each do |t| %>
+          <% dead = t.revoked? || t.expired? %>
+          <tr class="<%= "is-dead" if dead %>">
+            <td><div class="token-name"><span class="token-icon"><%= icon "key-round", size: 18 %></span><div><strong><%= t.name %></strong><div class="dim small"><%= t.masked %></div></div></div></td>
+            <td><%= chip "Read" %></td>
+            <td><%= short_date(t.created_at) %></td>
+            <td><%= t.last_used_at ? time_ago(t.last_used_at) : "Never used" %></td>
+            <td>
+              <% if t.revoked? %><span class="dot negative"></span> Revoked
+              <% elsif t.expired? %><span class="dot negative"></span> Expired <%= short_date(t.expires_at) %>
+              <% else %><%= t.expires_at ? "in #{distance_of_time_in_words_to_now(t.expires_at)}" : "Never" %><% end %>
+            </td>
+            <td class="actions"><%= button_to (dead ? "Delete" : "Revoke"), api_token_path(t), method: :delete, class: "link-danger", form: { data: { turbo: false } } %></td>
+          </tr>
+        <% end %>
+        <% if tokens.empty? %><tr><td colspan="6" class="empty muted">No tokens yet. Create one to let a script or an AI agent read the wiki.</td></tr><% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <footer class="using">
+    <div class="eyebrow">Using a token</div>
+    <div class="snippet"><code id="curl-snippet">curl -H "Authorization: Bearer &lt;your token&gt;" <%= request.base_url %>/api/v3/pages</code><button class="btn btn-icon" type="button" data-copy-target="#curl-snippet" data-keep="1" aria-label="Copy command"><%= icon "copy" %></button></div>
+    <p class="muted small"><%= icon "shield-check", size: 14, css: "accent" %> Tokens are read-only and only work on the API. They cannot sign in to the website or change anything.</p>
+  </footer>
+</section>
+
+<dialog id="create-token" aria-labelledby="create-token-title">
+  <%= form_with url: api_tokens_path, class: "dialog-body" do %>
+    <header class="dialog-head"><span class="dialog-icon"><%= icon "key-round", size: 22 %></span><div><h2 id="create-token-title">Create API token</h2><p class="muted">Give the token a name so you remember what uses it.</p></div></header>
+    <div class="field"><label for="token-name">Token name</label><input type="text" id="token-name" name="name" value="" placeholder="Claude agent" required maxlength="60"><span class="hint">Shown in your token list. Does not affect what the token can do.</span></div>
+    <div class="field">
+      <span class="label">Permissions</span>
+      <label class="choice is-selected"><input type="radio" name="scope" value="read" checked><span class="mark"></span><span><strong>Read only</strong><small>Read pages, search and list categories</small></span></label>
+      <label class="choice is-disabled"><input type="radio" name="scope" value="write" disabled><span class="mark"></span><span><strong>Read and write</strong><small>Edit pages and post in discussions</small></span><%= chip "Coming later" %></label>
+    </div>
+    <div class="field">
+      <span class="label">Expires</span>
+      <div class="segmented">
+        <% [["30", "30 days"], ["90", "90 days"], ["365", "1 year"], ["never", "No expiry"]].each do |value, label| %>
+          <label><input type="radio" name="expires" value="<%= value %>" <%= "checked" if value == "90" %>><span><%= label %></span></label>
+        <% end %>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn" type="button" data-close>Cancel</button><button class="btn btn-primary" type="submit">Create token</button></div>
+  <% end %>
+</dialog>
+
+<% if new_token %>
+  <dialog id="token-created" data-open-on-load aria-labelledby="token-created-title">
+    <div class="dialog-body">
+      <header class="dialog-head"><span class="dialog-icon"><%= icon "check", size: 22 %></span><div><h2 id="token-created-title">Token created</h2><p class="muted">Copy it now. For your security it will never be shown again.</p></div></header>
+      <div class="field"><span class="label">Your new token</span>
+        <div class="token-box"><code id="new-token-value"><%= new_token["value"] %></code><button class="btn" type="button" data-copy-target="#new-token-value">Copy</button></div>
+      </div>
+      <dl class="token-facts">
+        <div><dt>Name</dt><dd><%= new_token["name"] %></dd></div>
+        <div><dt>Scope</dt><dd>Read only</dd></div>
+        <div><dt>Expires</dt><dd><%= new_token["expires"] ? "in #{distance_of_time_in_words_to_now(Time.zone.parse(new_token["expires"]))}" : "Never" %></dd></div>
+      </dl>
+      <p class="warning"><%= icon "triangle-alert", size: 16 %>Store it somewhere safe, such as an environment variable. Anyone with this token can read the wiki as you until you revoke it.</p>
+      <div class="form-actions"><button class="btn btn-primary" type="button" data-close>Done</button></div>
+    </div>
+  </dialog>
+<% end %>

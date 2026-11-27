@@ -1,0 +1,12 @@
+<% content_for :title, page_title(@profile.name) %>
+<% content_for :tabs do %>
+  <%= render "shared/tabs", left: [["Main Page", root_path, false], ["Members", member_path(@profile.username), true]], right: [] %>
+<% end %>
+
+<div class="account-page">
+  <header class="page-head"><div class="crumbs"><%= link_to "Wiki", root_path %><%= icon "chevron-right", size: 12 %><span>Members</span></div><h1><%= @profile.name %></h1></header>
+  <div class="profile-columns">
+    <%= render "members/profile_card", user: @profile, own: false %>
+    <div class="profile-side"><%= render "members/side", stats: @stats, activity: @activity %></div>
+  </div>
+</div>

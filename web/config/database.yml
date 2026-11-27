@@ -1,0 +1,20 @@
+# MariaDB via the mysql2 adapter. Set DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD,
+# or a single DATABASE_URL (mysql2://user:pass@host:3306/name), which Rails merges in.
+default: &default
+  adapter: mysql2
+  encoding: utf8mb4
+  collation: utf8mb4_unicode_ci
+  host: <%= ENV.fetch("DB_HOST", "db.rigkit.org") %>
+  port: <%= ENV.fetch("DB_PORT", 3306) %>
+  username: <%= ENV.fetch("DB_USER", "rage-wiki") %>
+  password: <%= ENV["DB_PASSWORD"] %>
+  database: <%= ENV.fetch("DB_NAME", "rage-wiki") %>
+  max_connections: 5
+
+development:
+  <<: *default
+test:
+  <<: *default
+  database: <%= ENV.fetch("DB_NAME_TEST", "rage-wiki-test") %>
+production:
+  <<: *default

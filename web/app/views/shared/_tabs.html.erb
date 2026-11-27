@@ -1,0 +1,10 @@
+<%# locals: left, right — arrays of [label, path, active] ; extra: optional html for the right side %>
+<nav class="tabs" aria-label="Page sections">
+  <div class="tab-group">
+    <% left.each do |label, path, active| %><%= tab_link(label, path, active) %><% end %>
+  </div>
+  <div class="tab-group">
+    <% right.each do |label, path, active| %><%= tab_link(label, path, active) %><% end %>
+    <%= extra if local_assigns[:extra] %>
+  </div>
+</nav>

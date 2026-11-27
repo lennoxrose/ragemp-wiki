@@ -1,0 +1,23 @@
+<%# locals: user, own %>
+<article class="profile-card card">
+  <div class="banner-wrap">
+    <div class="banner">
+      <% if user.banner.attached? %><%= image_tag url_for(user.banner), alt: "" %><% else %><%= image_tag "logo-r.svg", alt: "", class: "banner-mark" %><% end %>
+    </div>
+    <div class="profile-avatar"><%= avatar_tag(user, size: 120) %></div>
+  </div>
+  <div class="profile-info">
+    <div class="name-row">
+      <div>
+        <div class="name-line"><h2><%= user.name %></h2><%= role_chip(user) %></div>
+        <div class="muted">@<%= user.username %></div>
+      </div>
+      <% if own %><%= link_to "Edit profile", settings_path, class: "btn" %><% end %>
+    </div>
+    <% if user.bio.present? %><p class="bio"><%= user.bio %></p><% elsif own %><p class="bio muted">Add a short bio in your settings so other members know who you are.</p><% end %>
+    <div class="meta">
+      <span><%= icon "calendar" %>Joined <%= user.created_at.strftime("%B %Y") %></span>
+      <span><%= icon "clock" %>Active <%= time_ago(user.last_seen_at) %></span>
+    </div>
+  </div>
+</article>

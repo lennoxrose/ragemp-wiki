@@ -1,0 +1,148 @@
+<% content_for :title, page_title("Sync") %>
+<% run = @run %>
+<% active = @active.present? %>
+
+<header class="admin-title">
+  <div>
+    <h1>Sync</h1>
+    <p class="muted">Mirrors the RAGE:MP wiki into Markdown with the wikisync tool. Runs are incremental unless you force a full resync.</p>
+  </div>
+  <div class="admin-controls">
+    <%= button_to "Full resync", run_admin_sync_path(full: 1), method: :post, class: "btn", disabled: active %>
+    <%= button_to "Run now", run_admin_sync_path, method: :post, class: "btn btn-primary", disabled: active %>
+  </div>
+</header>
+
+<% unless @local_runner %>
+  <p class="flash"><%= icon "triangle-alert", size: 16 %> wikisync is not installed next to the panel (<code><%= Rails.configuration.x.wikisync_bin %></code>). Runs you start here wait in the queue until the wikisync application claims them through <code>/api/v2</code>. Build it with <code>npm run build:all</code> to run syncs from the panel directly.</p>
+<% end %>
+
+<section class="kpi-strip four card" id="sync-strip">
+  <div class="kpi"><div class="eyebrow">Status</div><b id="sync-status-text" class="<%= active ? "accent" : "" %>"><%= active ? "Running" : (run ? run.status.capitalize : "Never run") %></b><div class="muted small" id="sync-status-sub"><%= run ? "#{run.trigger.capitalize} · started #{time_ago(run.started_at)}" : "Press Run now to start the first sync" %></div></div>
+  <div class="kpi"><div class="eyebrow">Next run</div><b><%= @settings.enabled && @settings.next_run_at ? @settings.next_run_at.in_time_zone(@settings.zone).strftime("%a %H:%M") : "Off" %></b><div class="muted small"><%= @settings.enabled ? "#{SyncSetting::FREQUENCIES[@settings.frequency]} · #{@settings.time_zone}" : "Automatic syncs are off" %></div></div>
+  <div class="kpi"><div class="eyebrow">Pages in vault</div><b><%= delimited(@pages) %></b><div class="muted small">in <%= Wiki.library.categories.size %> categories</div></div>
+  <div class="kpi"><div class="eyebrow">Failed batches (30d)</div><b><%= @failed_batches %></b><div class="muted small"><%= @last_failure ? "Last problem #{short_date(@last_failure.started_at)}" : "No failures" %></div></div>
+</section>
+
+<div class="admin-columns sync-columns">
+  <div class="main-column">
+    <section class="card run-card" id="run-card" data-active="<%= active %>" data-poll-url="<%= api_v1_sync_status_path %>">
+      <header>
+        <div><h2>Current run</h2><p class="muted small">Live events from <code>wikisync -json</code></p></div>
+        <div class="run-meta">
+          <% if run %><%= chip(run.status.capitalize, accent: active) %><%= chip(run.trigger.capitalize) %><% end %>
+          <% if active %><%= button_to "Stop run", stop_admin_sync_path, method: :post, class: "btn" %><% end %>
+        </div>
+      </header>
+
+      <% if run %>
+        <% phases = [["listing", "Listing", "#{delimited(run.listed)} pages listed"], ["syncing", "Syncing", "#{delimited(run.written)} of #{delimited(run.changed_count)} written"], ["indexing", "Indexing", "Building the indexes"]] %>
+        <% finished_ok = run.status.in?(%w[success warnings]) %>
+        <% idx = phases.index { |k, _, _| k == run.phase } || (finished_ok ? 3 : -1) %>
+        <ol class="phases" id="phases">
+          <% phases.each_with_index do |(key, name, sub), i| %>
+            <% state = finished_ok || i < idx ? "done" : (i == idx ? "current" : "pending") %>
+            <li class="phase <%= state %>" data-phase="<%= key %>"><span class="marker"><%= icon("check", size: 16, stroke_width: 2.5) if state == "done" %></span><span><b><%= name %></b><small><%= state == "pending" ? "Waiting" : sub %></small></span></li>
+          <% end %>
+        </ol>
+        <div class="progress">
+          <div class="row"><span id="sync-batches">Batch <%= run.batches %> · <%= run.changed_count %> changed pages</span><b id="sync-percent-text"><%= run.percent %>%</b></div>
+          <div class="track big"><i id="sync-bar" class="c0" style="width: <%= run.percent %>%"></i></div>
+        </div>
+        <div class="plan-stats">
+          <div><small>Listed</small><b id="sync-listed"><%= delimited(run.listed) %></b></div>
+          <div><small>Changed</small><b id="sync-changed" class="accent"><%= delimited(run.changed_count) %></b></div>
+          <div><small>Removed</small><b id="sync-removed"><%= run.removed %></b></div>
+          <div><small>Failed</small><b id="sync-failed" class="<%= run.failed.zero? ? "good" : "bad" %>"><%= run.failed %></b></div>
+        </div>
+        <% warns = run.log_lines.select { |l| l[:level] == "WARN" || l[:level] == "ERROR" }.last(3) %>
+        <% if run.error.present? %><p class="warning"><%= icon "triangle-alert", size: 16 %><%= run.error %></p><% end %>
+        <% warns.each do |w| %><p class="warning"><%= icon "triangle-alert", size: 16 %><%= w[:message] %></p><% end %>
+      <% else %>
+        <p class="empty muted">No sync has run yet. Press <b>Run now</b> to mirror the wiki into <code>dist/</code>.</p>
+      <% end %>
+    </section>
+
+    <section class="card run-history">
+      <header><div><h2>Run history</h2><p class="muted small">Last runs · logs are kept in the database</p></div></header>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Started</th><th>Trigger</th><th>Changed</th><th>Removed</th><th>Failed</th><th>Duration</th><th>Status</th></tr></thead>
+          <tbody>
+            <% @history.each do |h| %>
+              <tr>
+                <td><%= h.started_at.in_time_zone.strftime("%b %-d, %H:%M") %></td>
+                <td><%= h.trigger.capitalize %><%= " · Full" if h.full %></td>
+                <td><%= delimited(h.changed_count) %></td><td><%= h.removed %></td><td class="<%= "bad" if h.failed.positive? %>"><%= h.failed %></td>
+                <td><%= h.active? ? "running" : distance_of_time_in_words(h.started_at, h.finished_at || h.started_at, include_seconds: true) %></td>
+                <td><span class="dot <%= { "success" => "positive", "warnings" => "orange", "failed" => "negative", "cancelled" => "negative" }[h.status] || "accent" %>"></span> <%= h.status.capitalize %></td>
+              </tr>
+            <% end %>
+            <% if @history.empty? %><tr><td colspan="7" class="muted empty">Nothing yet.</td></tr><% end %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div class="side-column">
+    <%= form_with url: settings_admin_sync_path, method: :patch, class: "card side-card settings-form" do %>
+      <header>
+        <div><h2>Schedule</h2><p class="muted small">Runs wikisync automatically</p></div>
+        <input type="hidden" name="enabled" id="sched-enabled" value="<%= @settings.enabled ? "1" : "0" %>">
+        <button type="button" class="toggle" role="switch" aria-checked="<%= @settings.enabled %>" aria-label="Automatic syncs" data-toggle-input="#sched-enabled"></button>
+      </header>
+      <div class="eyebrow">Frequency</div>
+      <div class="radios">
+        <% SyncSetting::FREQUENCIES.each do |key, label| %>
+          <label class="radio-row"><input type="radio" name="frequency" value="<%= key %>" <%= "checked" if @settings.frequency == key %>><span class="mark"></span><span class="grow"><%= label %></span><small><%= SyncSetting::HINTS[key] %></small></label>
+        <% end %>
+      </div>
+      <div class="field"><label for="cron">Cron (custom only)</label><input type="text" id="cron" name="cron" value="<%= @settings.cron %>" placeholder="0 3 * * *"></div>
+      <div class="grid-2">
+        <div class="field"><label for="run_at">Run at</label><input type="text" id="run_at" name="run_at" value="<%= @settings.run_at %>" pattern="([01][0-9]|2[0-3]):[0-5][0-9]"></div>
+        <div class="field"><label for="time_zone">Time zone</label><input type="text" id="time_zone" name="time_zone" value="<%= @settings.time_zone %>"></div>
+      </div>
+      <% if @settings.enabled %>
+        <div><div class="eyebrow">Next runs</div><ul class="next-runs"><% @settings.upcoming(3).each do |t| %><li><span class="dot"></span><%= t.in_time_zone(@settings.zone).strftime("%a, %b %-d, %H:%M") %></li><% end %></ul></div>
+      <% end %>
+
+      <hr>
+      <header class="plain"><div><h2>Run options</h2><p class="muted small">Passed to the wikisync tool</p></div></header>
+      <div class="field"><span class="label">Output mode</span>
+        <div class="segmented"><% SyncSetting::MODES.each do |m| %><label><input type="radio" name="mode" value="<%= m %>" <%= "checked" if @settings.mode == m %>><span><%= m.capitalize %></span></label><% end %></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label for="batch">Batch size</label><input type="number" id="batch" name="batch" value="<%= @settings.batch %>" min="1" max="500"></div>
+        <div class="field"><label for="namespace">Namespace</label><input type="number" id="namespace" name="namespace" value="<%= @settings.namespace %>" min="0"></div>
+      </div>
+      <div class="field"><label for="out">Output folder</label><input type="text" id="out" value="<%= Wiki.root %>" disabled><span class="hint">Set with the WIKI_ROOT environment variable.</span></div>
+      <div class="toggle-row">
+        <div><strong id="l-weekly">Weekly full resync</strong><div class="muted small">Refetch every page on Sundays</div></div>
+        <input type="hidden" name="weekly_full" id="weekly-full" value="<%= @settings.weekly_full ? "1" : "0" %>">
+        <button type="button" class="toggle" role="switch" aria-checked="<%= @settings.weekly_full %>" aria-labelledby="l-weekly" data-toggle-input="#weekly-full"></button>
+      </div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save settings</button></div>
+    <% end %>
+  </div>
+</div>
+
+<section class="card log-card" id="log-card">
+  <header>
+    <div><h2>Run log</h2><p class="muted small">Output of wikisync-cli, streamed live</p></div>
+    <div class="log-controls">
+      <% if run %><span class="chip">Run <%= run.id %> · <%= run.started_at.in_time_zone.strftime("%b %-d, %H:%M") %></span><% end %>
+      <button type="button" class="btn btn-icon" data-copy-target="#log-lines" data-keep="1" aria-label="Copy log"><%= icon "copy", size: 16 %></button>
+      <% if run %><%= link_to log_admin_sync_path(run_id: run.id), class: "btn" do %><%= icon "download" %>Download .log<% end %><% end %>
+    </div>
+  </header>
+  <div class="log-window" id="log-window" tabindex="0" aria-label="Run log">
+    <ol id="log-lines" class="log-lines">
+      <% @lines.each_with_index do |l, i| %>
+        <li class="lvl-<%= l[:level].to_s.downcase %>"><span class="no"><%= i + 1 %></span><time><%= l[:time] %></time><span class="level"><%= l[:level] %></span><span class="msg"><%= l[:message] %></span></li>
+      <% end %>
+    </ol>
+    <% if @lines.empty? %><p class="muted empty">No log lines yet. They appear here while a sync runs.</p><% end %>
+  </div>
+  <footer><span class="live"><span class="dot <%= active ? "positive" : "" %>"></span><%= active ? "Live" : "Idle" %></span><span class="muted small" id="log-count"><%= @lines.size %> lines</span></footer>
+</section>

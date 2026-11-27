@@ -1,0 +1,6 @@
+<%# locals: page, active (:read, :source, :discussion, :map) %>
+<% label = page.title.length > 30 ? "#{page.title.first(29)}…" : page.title %>
+<%= render "shared/tabs",
+      left: [[label, wiki_page_path(page.slug), active.in?(%i[read source])], ["Discussion", wiki_discussion_path(page.slug), active == :discussion], ["Map", map_path(focus: page.slug), active == :map]],
+      right: (active.in?(%i[read source]) ? [["Read", wiki_page_path(page.slug), active == :read], ["View source", wiki_source_path(page.slug), active == :source]] : []),
+      extra: render("pages/tools", page: page) %>

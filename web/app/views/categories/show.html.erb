@@ -1,0 +1,25 @@
+<% content_for :title, page_title(@name) %>
+<% content_for :tabs do %>
+  <%= render "shared/tabs", left: [["Main Page", root_path, false], [@name, category_path(@name), true]], right: [] %>
+<% end %>
+
+<section class="category">
+  <div class="crumbs"><%= link_to "Wiki", root_path %><%= icon "chevron-right", size: 12 %><span>Categories</span></div>
+  <h1><span class="dot" style="background: <%= category_color(@name) %>"></span><%= @name %></h1>
+  <p class="muted"><%= delimited(@total) %> pages<%= " · #{delimited(@shown)} starting with “#{@letter}”" if @letter %></p>
+
+  <nav class="letters" aria-label="Filter by first letter">
+    <%= link_to "All", category_path(@name), class: ["letter", ("is-active" unless @letter)] %>
+    <% @letters.each do |l| %><%= link_to l, category_path(@name, letter: l), class: ["letter", ("is-active" if l == @letter)] %><% end %>
+  </nav>
+
+  <ul class="page-list">
+    <% @pages.each do |p| %><li><%= link_to p.title, wiki_page_path(p.slug) %></li><% end %>
+  </ul>
+
+  <% if @pages_count > 1 %>
+    <nav class="pager" aria-label="Pages">
+      <% (1..@pages_count).each do |n| %><%= link_to n, category_path(@name, letter: @letter, page: n), class: ["letter", ("is-active" if n == @current)] %><% end %>
+    </nav>
+  <% end %>
+</section>

@@ -1,0 +1,57 @@
+/* Discussion: topics, replies with Reddit-style thread lines, rail. */
+.discussion { display: grid; grid-template-columns: minmax(0, 1fr) 296px; gap: 48px; align-items: start; padding-top: 40px; }
+.discussion-main { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+.toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.filters { display: flex; gap: 6px; }
+.filter { padding: 8px 14px; border-radius: 8px; color: var(--muted); font-size: 14px; }
+.filter:hover { color: var(--text); text-decoration: none; }
+.filter.is-active { background: var(--raised); color: var(--text); font-weight: 700; }
+.topic { padding: 26px 28px; display: flex; flex-direction: column; gap: 22px; scroll-margin-top: 16px; }
+.topic-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.topic-head h2 { font-size: 18px; line-height: 26px; overflow-wrap: anywhere; }
+.topic-flags { display: flex; align-items: center; gap: 8px; flex: none; }
+.topic-flags .menu form { margin: 0; }
+.topic-flags .menu .danger { color: var(--negative); }
+.post-wrap { display: flex; flex-direction: column; gap: 22px; }
+.post { display: flex; gap: 14px; align-items: flex-start; position: relative; scroll-margin-top: 16px; }
+.post-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.post-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; }
+.post-meta .author { color: var(--text); font-weight: 700; font-size: 14px; }
+.post-meta .role { color: var(--link); }
+.post-text { font-size: 15px; line-height: 24px; overflow-wrap: anywhere; }
+.post-text p + p { margin-top: 10px; }
+.post-actions { display: flex; align-items: center; gap: 18px; color: var(--muted); font-size: 13px; }
+.post-actions form { margin: 0; }
+.like { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0; color: var(--muted); font-size: 13px; }
+.like:hover, .like.is-liked { color: var(--accent); }
+.link-muted { background: none; border: 0; padding: 0; color: var(--dim); font-size: 13px; }
+.link-muted:hover { color: var(--negative); }
+
+/* thread line: from the poster's avatar down, with a curved elbow into each reply's avatar */
+.post.has-stem::before { content: ""; position: absolute; left: 19px; top: 46px; bottom: -22px; width: 2px; background: var(--border-input); }
+.replies { margin-left: 19px; padding-left: 24px; display: flex; flex-direction: column; }
+.reply { position: relative; padding-bottom: 22px; }
+.reply:last-child { padding-bottom: 0; }
+.reply::before { content: ""; position: absolute; left: -24px; top: 0; bottom: 0; width: 2px; background: var(--border-input); }
+.reply:last-child::before { bottom: auto; height: 18px; width: 0; }
+.reply::after { content: ""; position: absolute; left: -24px; top: 0; width: 24px; height: 17px; border-left: 2px solid var(--border-input); border-bottom: 2px solid var(--border-input); border-bottom-left-radius: 12px; }
+
+.reply-box > summary { list-style: none; width: fit-content; }
+.reply-box > summary::-webkit-details-marker { display: none; }
+.reply-form { margin-top: 14px; display: flex; flex-direction: column; gap: 12px; }
+.empty-state { padding: 40px 28px; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.empty-state h2 { font-size: 20px; }
+.discussion-rail { display: flex; flex-direction: column; gap: 24px; position: sticky; top: 16px; }
+.rail-card { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.rail-card h3 { font-size: 16px; }
+.check-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.check-list li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 20px; }
+.check-list .icon { margin-top: 2px; }
+.people { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.people li { display: flex; gap: 12px; align-items: center; }
+.person { color: var(--text); font-weight: 700; font-size: 14px; }
+
+@media (max-width: 1000px) {
+  .discussion { grid-template-columns: 1fr; }
+  .discussion-rail { position: static; }
+}

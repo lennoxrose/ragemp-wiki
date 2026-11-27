@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= content_for?(:title) ? yield(:title) : page_title %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <link rel="icon" type="image/svg+xml" href="/icon.svg">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap">
+    <%= stylesheet_link_tag :app %>
+    <%= yield :head %>
+  </head>
+  <body class="<%= [("text-#{current_user.pref(:text_size)}" if current_user && current_user.pref(:text_size) != "standard"), ("wide" if current_user&.pref(:page_width) == "wide"), yield(:body_class)].compact.join(" ") %>">
+    <%= render "shared/header" %>
+    <main>
+      <div class="container">
+        <%= yield :tabs %>
+        <% flash.each do |type, message| %><p class="flash <%= type %>" role="status"><%= message %></p><% end %>
+        <%= yield %>
+      </div>
+    </main>
+    <footer class="site-footer"><div class="bar">RAGE Multiplayer Wiki · Private Documentation</div></footer>
+    <%= javascript_include_tag "app", defer: true %>
+  </body>
+</html>

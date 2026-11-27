@@ -1,0 +1,16 @@
+<% content_for :title, page_title("Source of #{@page.title}") %>
+<% content_for :tabs do %>
+  <%= render "pages/tabs", page: @page, active: :source %>
+<% end %>
+
+<section class="source-view">
+  <div class="source-head">
+    <div>
+      <div class="eyebrow">Markdown source</div>
+      <h1><%= @page.title %></h1>
+      <p class="muted"><code><%= @page.path %></code></p>
+    </div>
+    <button class="btn" type="button" data-copy-target="#source-text"><%= icon "copy" %>Copy</button>
+  </div>
+  <pre class="source-code" id="source-text"><%= @page.raw %></pre>
+</section>
