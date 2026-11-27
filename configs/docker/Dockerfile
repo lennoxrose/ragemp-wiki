@@ -1,4 +1,4 @@
-# Build from the repo root:  docker build -f configs/docker/Dockerfile -t <registry>/ragemp-wiki:<tag> .
+# Built and pushed to ghcr.io by .github/workflows/image.yml. Manual build from the repo root:  docker build -f configs/docker/Dockerfile -t <image> .
 FROM golang:1.27 AS wikisync
 WORKDIR /src
 COPY go.mod go.sum ./
