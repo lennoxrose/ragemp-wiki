@@ -10,17 +10,18 @@ RUN CGO_ENABLED=0 go build -o /out/wikisync ./cmd/wikisync
 FROM ruby:3.4-slim AS build
 RUN apt-get update -qq && apt-get install -y --no-install-recommends build-essential libmariadb-dev pkg-config git && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-ENV RAILS_ENV=production BUNDLE_DEPLOYMENT=1 BUNDLE_WITHOUT="development:test"
+ENV RAILS_ENV=production BUNDLE_WITHOUT="development:test"
 COPY web/Gemfile web/Gemfile.lock ./
 RUN bundle install && rm -rf "$BUNDLE_PATH"/ruby/*/cache
 COPY web/ .
+RUN bundle lock --add-platform x86_64-linux
 RUN SECRET_KEY_BASE_DUMMY=1 bin/rails assets:precompile
 
 FROM ruby:3.4-slim
 # chromium is what wikisync drives to get past Cloudflare.
 RUN apt-get update -qq && apt-get install -y --no-install-recommends libmariadb3 chromium fonts-liberation && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-ENV RAILS_ENV=production BUNDLE_DEPLOYMENT=1 BUNDLE_WITHOUT="development:test" \
+ENV RAILS_ENV=production BUNDLE_WITHOUT="development:test" \
     WIKI_ROOT=/data/dist WIKISYNC_BIN=/usr/local/bin/wikisync CHROMIUM_PATH=/usr/bin/chromium CHROMIUM_NO_SANDBOX=1 \
     RAILS_LOG_TO_STDOUT=1
 COPY --from=wikisync /out/wikisync /usr/local/bin/wikisync
